@@ -1,63 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Image Cutout</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Background</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #output { margin-top: 20px; }
+        img { max-width: 100%; height: auto; }
+        button { margin-top: 10px; padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+    </style>
 </head>
 <body>
-    <h1>Image Cutout</h1>
-    <input type="file" id="imageInput" accept="image/*">
-    <button id="cutoutButton">Remove Background</button>
-    <button id="downloadButton">Download Image</button>
-    <div id="result" style="height: 200px;"></div>
+    <h2>Upload an Image to Remove Background</h2>
+    <input type="file" id="imageInput">
+    <button onclick="uploadImage()">Remove Background</button>
+    
+    <div id="output"></div>
+    <button id="downloadButton" style="display:none;" onclick="downloadImage()">Download Processed Image</button>
 
     <script>
-        let base64Image = null;
-        document.getElementById('cutoutButton').addEventListener('click', async () => {
-            const fileInput = document.getElementById('imageInput');
-            const file = fileInput.files[0];
+        let processedImageBase64 = '';
 
-            if (file) {
-                const formData = new FormData();
-                formData.append('image', file);
+        async function uploadImage() {
+            const input = document.getElementById("imageInput");
+            if (!input.files.length) {
+                alert("Please select an image.");
+                return;
+            }
 
-                try {
-                    const response = await fetch('/remove_background', {
-                        method: 'POST',
-                        body: formData
-                    });
+            const formData = new FormData();
+            formData.append("image", input.files[0]);
 
-                    const data = await response.json();
-                    console.log("data", data)
-                    
-                    if (data.image) {
-                        base64Image = data.image
-                        const img = document.createElement('img');
-                        img.src = 'data:image/png;base64,' + data.image;
-                        img.style.height = "200px"
-                        document.getElementById('result').innerHTML = '';
-                        document.getElementById('result').appendChild(img);
-                        document.getElementById('downloadButton').style.display = 'block';
-                        console.log(img)
-                    } else if (data.error) {
-                        document.getElementById('result').innerHTML = `<p>Error: ${data.error}</p>`;
-                    }
-                } catch (error) {
-                    document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
-                }
+            const response = await fetch("/remove_background", {
+                method: "POST",
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.image) {
+                processedImageBase64 = result.image;
+                document.getElementById("output").innerHTML = `<img style="height: 300px" src="data:image/png;base64,${result.image}" alt="Processed Image">`;
+                document.getElementById("downloadButton").style.display = 'inline-block';
             } else {
-                alert('Please select an image.');
+                alert("Error: " + result.detail);
             }
-        });
-        document.getElementById('downloadButton').addEventListener('click', () => {
-            if (base64Image) {
-                const link = document.createElement('a');
-                link.href = 'data:image/png;base64,' + base64Image;
-                link.download = 'cutout_image.png'; // Set the download filename
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-        });
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.href = `data:image/png;base64,${processedImageBase64}`;
+            let random = Math.floor(Math.random() * 100000000000)
+            link.download = `bg-remove-image${random}.png`;
+            link.click();
+        }
     </script>
 </body>
 </html>
