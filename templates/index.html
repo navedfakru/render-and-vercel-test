@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Cutout</title>
+</head>
+<body>
+    <h1>Image Cutout</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button id="cutoutButton">Remove Background</button>
+    <button id="downloadButton">Download Image</button>
+    <div id="result" style="height: 200px;"></div>
+
+    <script>
+        let base64Image = null;
+        document.getElementById('cutoutButton').addEventListener('click', async () => {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await fetch('/remove_background', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    console.log("data", data)
+                    
+                    if (data.image) {
+                        base64Image = data.image
+                        const img = document.createElement('img');
+                        img.src = 'data:image/png;base64,' + data.image;
+                        img.style.height = "200px"
+                        document.getElementById('result').innerHTML = '';
+                        document.getElementById('result').appendChild(img);
+                        document.getElementById('downloadButton').style.display = 'block';
+                        console.log(img)
+                    } else if (data.error) {
+                        document.getElementById('result').innerHTML = `<p>Error: ${data.error}</p>`;
+                    }
+                } catch (error) {
+                    document.getElementById('result').innerHTML = `<p>Error: ${error.message}</p>`;
+                }
+            } else {
+                alert('Please select an image.');
+            }
+        });
+        document.getElementById('downloadButton').addEventListener('click', () => {
+            if (base64Image) {
+                const link = document.createElement('a');
+                link.href = 'data:image/png;base64,' + base64Image;
+                link.download = 'cutout_image.png'; // Set the download filename
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        });
+    </script>
+</body>
+</html>
