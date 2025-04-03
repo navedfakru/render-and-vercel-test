@@ -38,7 +38,15 @@ export default function RemoveBg() {
       console.log("API Response:", data);
 
       if (data.imageUrl) {
-        setOutput(data.imageUrl);
+        const buff = data.imageUrl
+        // console.log("buff", buff)
+
+        const base64Image = Buffer.from(buff.data).toString("base64");
+        // console.log("data 1", base64Image)
+
+        const imageUrl = `data:image/png;base64,${base64Image}`;
+        // console.log("data 2")
+        setOutput(imageUrl);
       } else {
         throw new Error("Invalid response format");
       }

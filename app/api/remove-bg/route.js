@@ -24,15 +24,21 @@ export async function POST(req) {
     const outputImage = await rembg.remove(inputImage);
 
     // ✅ PNG में Convert करो
-    const outputBuffer = await outputImage.png().toBuffer();
+    const outputBuffer =  await outputImage.png().toBuffer();
+
+    // const base64Image =  outputBuffer.toString("base64");
+
+    // const imageUrl = `data:image/png;base64,${base64Image}`;
+    // console.log("imageUrl", imageUrl)
 
     // ✅ File को `public` Folder में Save करो
-    const outputPath = path.join(process.cwd(), "public", "test-output.png");
-    fs.writeFileSync(outputPath, outputBuffer);
+    // const outputPath = path.join(process.cwd(), "public", "test-output.png");
+    // fs.writeFileSync(outputPath, outputBuffer);
+
 
     console.log("✅ Background Removed & Saved Successfully!");
 
-    return NextResponse.json({ imageUrl: "/test-output.png" });
+    return NextResponse.json({ imageUrl: outputBuffer });
 
   } catch (error) {
     console.error("❌ Error Removing Background:", error);
